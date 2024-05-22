@@ -1,14 +1,13 @@
 import { config } from "dotenv";
 config();
 
-import { r } from "./r";
-import readline from "readline";
+import { validateCommand } from "./prompts/validateCommand";
+import { mutateState } from "./prompts/mutateState";
+import { analyzeNewAbilities } from "./prompts/analyzeNewAbilities";
+import { compileReports } from "./utils/compileReports";
+import { collectCommand } from "./utils/collectCommand";
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: '> '
-});
+
 
 const splashText = [
   '"In the beginning was the Word, and the Word was with God, and the Word was God.',
@@ -27,118 +26,21 @@ function showSplashText(index = 0) {
     setTimeout(() => showSplashText(index + 1), 100);
   } else {
     console.log("\nWelcome, Creator. The void awaits your commands.\n");
-    rl.prompt();
-    rl.on('line', async (line) => {
-      await processPlayerCommand(line);
-      rl.prompt();
-    }).on('close', () => {
-      console.log('Goodbye, Creator!');
-      process.exit(0);
-    });
+    collectCommand(async (line) => {
+      const validationReport = await validateCommand(currentState, line.trim()) || "";
+      const mutationReport = await mutateState(currentState, line.trim());
+      currentState = mutationReport || currentState;
+      const newAbilitiesReport = await analyzeNewAbilities(currentState);
+      const finalReport = await compileReports(validationReport, mutationReport, newAbilitiesReport);
+    
+      console.log(finalReport);
+    })
     
   }
 }
 
 async function processPlayerCommand(line: string) {
-  const validationReport = await validateCommand(currentState, line.trim()) || "";
-  if (!validationReport.includes("valid")) { // Assuming the validation text indicates validity clearly
-    console.log(validationReport);
-    rl.prompt();
-    return;
-  }
 
-  const mutationReport = await mutateState(currentState, line.trim());
-  const newAbilitiesReport = await analyzeNewAbilities(currentState);
-  const finalReport = await compileReports(validationReport, mutationReport, newAbilitiesReport);
-
-  console.log(finalReport);
-}
-
-async function validateCommand(state, command) {
-  const prompt = `
-    The universe is currently in this state: ${state}
-
-    Validate the command: ${command}
-  `
-  const response = r.chat([
-    {
-      type: "history.text",
-      role: "system",
-      data: {
-        text: prompt
-      }
-    },
-    {
-      type: "history.text",
-      role: "human",
-      data: {
-        text: command
-      }
-    }
-  ]);
-
-  const validationReport = await response.firstText();
-
-  // Mock validation
-  return validationReport;
-}
-
-async function mutateState(state, command) {
-  const prompt = `
-      Current state of the universe: ${state}
-      Execute the command to change the state: ${command}
-  `;
-  const response = await r.chat([
-      {
-          type: "history.text",
-          role: "system",
-          data: {
-              text: prompt
-          }
-      },
-      {
-          type: "history.text",
-          role: "human",
-          data: {
-              text: command
-          }
-      }
-  ]);
-
-  const newStateDescription = await response.firstText();
-  currentState = newStateDescription || currentState; // Update the global state based on text description
-
-  return newStateDescription;
-}
-
-
-async function analyzeNewAbilities(state) {
-  const prompt = `
-      Analyze the new state for unlocked abilities: ${state}
-  `;
-  const response = await r.chat([
-      {
-          type: "history.text",
-          role: "system",
-          data: {
-              text: prompt
-          }
-      }
-  ]);
-
-  const abilitiesReport = await response.firstText();
-  return abilitiesReport;
-}
-
-
-async function compileReports(validation, mutation, abilities) {
-  const finalReport = `
-      Validation Result: ${validation}
-      Mutation Effect: ${mutation}
-      New Abilities Unlocked: ${abilities}
-  `;
-
-  return finalReport.trim();
 }
 
 // Start the application
