@@ -1,13 +1,14 @@
 import { config } from "dotenv";
 config();
 
-import { validateCommand } from "./prompts/validateCommand";
-import { mutateState } from "./prompts/mutateState";
-import { compileReports } from "./utils/compileReports";
 import { collectCommand } from "./utils/collectCommand";
 import { v4 } from "uuid";
 import { RaggedHistoryItem } from "ragged";
-import { reportChanges } from "./prompts/summarizeChanges";
+import { commandExecutor } from "./ai/CommandExecutor";
+
+const mutateState = commandExecutor('mutate-state');
+const validateCommand = commandExecutor('validate-command');
+const reportChanges = commandExecutor('report-changes');
 
 
 const splashText = [
