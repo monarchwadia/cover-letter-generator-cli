@@ -41,7 +41,18 @@ export const commandExecutor = <T>(namespace: string) => {
         return output;
     }
 
+    const executeAndGetFirstText = async (sessionId: string, command: string, data: T, opts?: PromptOpts) => {
+        const output = await execute(sessionId, command, data, opts);
+
+        if (output.length === 0 || output[0].type !== 'history.text') {
+            throw new Error('Critical error: No text output found!');
+        }
+
+        return output[0].data.text;
+    }
+
     return {
-        execute
+        execute,
+        executeAndGetFirstText
     }
 }

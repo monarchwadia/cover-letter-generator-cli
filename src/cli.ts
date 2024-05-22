@@ -8,6 +8,7 @@ import { commandExecutor } from "./ai/CommandExecutor";
 
 const mutateState = commandExecutor('mutate-state');
 const validateCommand = commandExecutor('validate-command');
+const evolveWorld = commandExecutor('evolve-world');
 const reportChanges = commandExecutor('report-changes');
 
 
@@ -33,46 +34,38 @@ function showSplashText(index = 0) {
 
       type Context = {
         oldState: string,
-        validationReport: RaggedHistoryItem[],
+        validationReport?: string,
         newState?: string
       }
       let context: Context = {
         oldState: state,
-        validationReport: [],
+        validationReport: undefined,
         newState: undefined 
       }
-      context.validationReport = await validateCommand.execute(sessionId, line.trim(), context);
 
-      const mutationResult = await mutateState.execute(sessionId, line.trim(), context);
-      if (mutationResult[0].type !== "history.text") {
-        console.log("Something went wrong. Please try again.");
-        return;
-      }
+      // validate the command
+      context.validationReport = await validateCommand.executeAndGetFirstText(sessionId, line.trim(), context);
 
-      context.newState = (mutationResult[0].data.text);
+      // change the world
+      context.newState = await mutateState.executeAndGetFirstText(sessionId, line.trim(), context);
+
+      // print a report on the changes
+      const report = await reportChanges.executeAndGetFirstText(sessionId, line.trim(), context);
 
       // update state
       state = context.newState;
 
-      // print a report on the changes
-      const report = await reportChanges.execute(sessionId, line.trim(), context);
-      if (report[0].type !== "history.text") {
-        console.log("Something went wrong. Please try again.");
-        return;
-      }
-
       console.log("=====================================");
-      console.log("REPORT: ", report[0].data.text);
+      console.log("REPORT: ", report);
       console.log("STATE: ", state);
+
+
+
+
       console.log("The void awaits your next command.");
     })
     
   }
 }
-
-async function processPlayerCommand(line: string) {
-
-}
-
 // Start the application
 showSplashText();
