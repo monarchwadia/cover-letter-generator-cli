@@ -1,28 +1,32 @@
-import { r } from "../r"
+import { commandExecutor } from "../ai/CommandExecutor";
 
-export async function mutateState(state, command) {
-    const prompt = `
-        Current state of the universe: ${state}
-        Execute the command to change the state: ${command}
-    `;
-    const response = await r.chat([
-        {
-            type: "history.text",
-            role: "system",
-            data: {
-                text: prompt
-            }
-        },
-        {
-            type: "history.text",
-            role: "human",
-            data: {
-                text: command
-            }
-        }
-    ]);
+export const mutateState = commandExecutor('mutate-state');
+
+// import { r } from "../r"
+
+// export async function mutateState(state, command) {
+//     const prompt = `
+//         Current state of the universe: ${state}
+//         Execute the command to change the state: ${command}
+//     `;
+//     const response = await r.chat([
+//         {
+//             type: "history.text",
+//             role: "system",
+//             data: {
+//                 text: prompt
+//             }
+//         },
+//         {
+//             type: "history.text",
+//             role: "human",
+//             data: {
+//                 text: command
+//             }
+//         }
+//     ]);
   
-    const newStateDescription = await response.firstText();
+//     const newStateDescription = await response.firstText();
   
-    return newStateDescription;
-  }
+//     return newStateDescription;
+//   }

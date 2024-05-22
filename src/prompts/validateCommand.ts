@@ -1,30 +1,34 @@
-import { r } from "../r";
+import { commandExecutor } from "../ai/CommandExecutor";
 
-export async function validateCommand(state, command) {
-  const prompt = `
-    The universe is currently in this state: ${state}
+export const validateCommand = commandExecutor<void>('validate-command');
 
-    Validate the command: ${command}
-  `
-  const response = r.chat([
-    {
-      type: "history.text",
-      role: "system",
-      data: {
-        text: prompt
-      }
-    },
-    {
-      type: "history.text",
-      role: "human",
-      data: {
-        text: command
-      }
-    }
-  ]);
+// import { r } from "../r";
 
-  const validationReport = await response.firstText();
+// export async function validateCommand(state, command) {
+//   const prompt = `
+//     The universe is currently in this state: ${state}
 
-  // Mock validation
-  return validationReport;
-}
+//     Validate the command: ${command}
+//   `
+//   const response = r.chat([
+//     {
+//       type: "history.text",
+//       role: "system",
+//       data: {
+//         text: prompt
+//       }
+//     },
+//     {
+//       type: "history.text",
+//       role: "human",
+//       data: {
+//         text: command
+//       }
+//     }
+//   ]);
+
+//   const validationReport = await response.firstText();
+
+//   // Mock validation
+//   return validationReport;
+// }

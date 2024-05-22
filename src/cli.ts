@@ -6,7 +6,10 @@ import { mutateState } from "./prompts/mutateState";
 import { analyzeNewAbilities } from "./prompts/analyzeNewAbilities";
 import { compileReports } from "./utils/compileReports";
 import { collectCommand } from "./utils/collectCommand";
-
+import { v4 } from "uuid";
+import { RaggedHistoryItem } from "ragged";
+import { updateState } from "./prompts/updateState";
+import { reportChanges } from "./prompts/summarizeChanges";
 
 
 const splashText = [
@@ -18,7 +21,7 @@ const splashText = [
   '"There is nothing. Not even darkness."'
 ];
 
-let currentState = "Void, nothing exists yet.";
+let state = "Void, nothing exists yet.";
 
 function showSplashText(index = 0) {
   if (index < splashText.length) {
@@ -27,13 +30,49 @@ function showSplashText(index = 0) {
   } else {
     console.log("\nWelcome, Creator. The void awaits your commands.\n");
     collectCommand(async (line) => {
-      const validationReport = await validateCommand(currentState, line.trim()) || "";
-      const mutationReport = await mutateState(currentState, line.trim());
-      currentState = mutationReport || currentState;
-      const newAbilitiesReport = await analyzeNewAbilities(currentState);
-      const finalReport = await compileReports(validationReport, mutationReport, newAbilitiesReport);
-    
-      console.log(finalReport);
+      const sessionId = v4();
+
+      type Context = {
+        state: string,
+        validationReport: RaggedHistoryItem[],
+        mutationReport: RaggedHistoryItem[],
+        newAbilitiesReport: RaggedHistoryItem[]
+      }
+      let context: Context = {
+        state: state,
+        validationReport: [],
+        mutationReport: [],
+        newAbilitiesReport: []
+      }
+      context.validationReport = await validateCommand.execute(sessionId, line.trim());
+      context.mutationReport = await mutateState.execute(sessionId, line.trim(), context);
+      context.newAbilitiesReport = await analyzeNewAbilities.execute(sessionId, line.trim(), context);
+
+      const result = await updateState.execute(sessionId, line.trim(), context);
+      if (result[0].type !== "history.text") {
+        console.log("Something went wrong. Please try again.");
+        return;
+      }
+
+      const oldState = state;
+      const newState = (result[0].data.text);
+
+      // update state
+      state = newState;
+
+      // print a report on the changes
+      const report = await reportChanges.execute(sessionId, line.trim(), {oldState, newState});
+      if (report[0].type !== "history.text") {
+        console.log("Something went wrong. Please try again.");
+        return;
+      }
+
+      console.log(report[0].data.text);
+
+      console.log("=====================================");
+      console.log(state);
+      console.log("=====================================");
+      console.log("The void awaits your next command.");
     })
     
   }

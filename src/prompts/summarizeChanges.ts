@@ -19,4 +19,4 @@ import { commandExecutor } from "../ai/CommandExecutor";
 //     return abilitiesReport;
 //   }
 
-export const analyzeNewAbilities = commandExecutor('analyze-new-abilities');
+export const reportChanges = commandExecutor('report-changes');
