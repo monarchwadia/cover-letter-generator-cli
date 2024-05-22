@@ -1,0 +1,24 @@
+{
+  "name": "god-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "openai": "^4.47.1",
+    "ragged": "^0.3.4",
+    "rxjs": "^7.8.1",
+    "tsx": "^4.10.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12"
+  }
+}
