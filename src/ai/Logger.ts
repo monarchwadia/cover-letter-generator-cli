@@ -39,7 +39,7 @@ export const logger = (namespace: string) => {
             });
 
             // write log
-            fs.writeFileSync(logPath, JSON.stringify(logArray));
+            fs.writeFileSync(logPath, JSON.stringify(logArray, null, 2));
         });
     }
 

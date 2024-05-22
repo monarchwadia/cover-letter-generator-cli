@@ -1,6 +1,6 @@
 import { commandExecutor } from "../ai/CommandExecutor";
 
-export const validateCommand = commandExecutor<void>('validate-command');
+export const validateCommand = commandExecutor('validate-command');
 
 // import { r } from "../r";
 

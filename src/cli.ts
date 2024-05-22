@@ -3,12 +3,10 @@ config();
 
 import { validateCommand } from "./prompts/validateCommand";
 import { mutateState } from "./prompts/mutateState";
-import { analyzeNewAbilities } from "./prompts/analyzeNewAbilities";
 import { compileReports } from "./utils/compileReports";
 import { collectCommand } from "./utils/collectCommand";
 import { v4 } from "uuid";
 import { RaggedHistoryItem } from "ragged";
-import { updateState } from "./prompts/updateState";
 import { reportChanges } from "./prompts/summarizeChanges";
 
 
@@ -33,45 +31,38 @@ function showSplashText(index = 0) {
       const sessionId = v4();
 
       type Context = {
-        state: string,
+        oldState: string,
         validationReport: RaggedHistoryItem[],
-        mutationReport: RaggedHistoryItem[],
-        newAbilitiesReport: RaggedHistoryItem[]
+        newState?: string
       }
       let context: Context = {
-        state: state,
+        oldState: state,
         validationReport: [],
-        mutationReport: [],
-        newAbilitiesReport: []
+        newState: undefined 
       }
-      context.validationReport = await validateCommand.execute(sessionId, line.trim());
-      context.mutationReport = await mutateState.execute(sessionId, line.trim(), context);
-      context.newAbilitiesReport = await analyzeNewAbilities.execute(sessionId, line.trim(), context);
+      context.validationReport = await validateCommand.execute(sessionId, line.trim(), context);
 
-      const result = await updateState.execute(sessionId, line.trim(), context);
-      if (result[0].type !== "history.text") {
+      const mutationResult = await mutateState.execute(sessionId, line.trim(), context);
+      if (mutationResult[0].type !== "history.text") {
         console.log("Something went wrong. Please try again.");
         return;
       }
 
-      const oldState = state;
-      const newState = (result[0].data.text);
+      context.newState = (mutationResult[0].data.text);
 
       // update state
-      state = newState;
+      state = context.newState;
 
       // print a report on the changes
-      const report = await reportChanges.execute(sessionId, line.trim(), {oldState, newState});
+      const report = await reportChanges.execute(sessionId, line.trim(), context);
       if (report[0].type !== "history.text") {
         console.log("Something went wrong. Please try again.");
         return;
       }
 
-      console.log(report[0].data.text);
-
       console.log("=====================================");
-      console.log(state);
-      console.log("=====================================");
+      console.log("REPORT: ", report[0].data.text);
+      console.log("STATE: ", state);
       console.log("The void awaits your next command.");
     })
     

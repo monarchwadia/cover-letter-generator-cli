@@ -7,7 +7,7 @@ export type PromptOpts = {
 
 export const prompter = () => {
     const r = buildRagged();
-    const prompt = async (input: RaggedHistoryItem[], opts: PromptOpts = { model: "gpt-3.5-turbo"}) => {
+    const prompt = async (input: RaggedHistoryItem[], opts: PromptOpts = { model: "gpt-4-turbo"}) => {
         return r.chat(input, {
             tools: [],
             requestOverrides: {
