@@ -1,16 +1,8 @@
 import { config } from "dotenv";
 config();
 
-import { Ragged } from "ragged";
+import { r } from "./r";
 import readline from "readline";
-
-const r = new Ragged({
-    provider: "openai",
-    config: {
-        apiKey: process.env.VITE_OPENAI_CREDS
-    }
-});
-
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -37,18 +29,7 @@ function showSplashText(index = 0) {
     console.log("\nWelcome, Creator. The void awaits your commands.\n");
     rl.prompt();
     rl.on('line', async (line) => {
-      const validationReport = await validateCommand(currentState, line.trim()) || "";
-      if (!validationReport.includes("valid")) { // Assuming the validation text indicates validity clearly
-        console.log(validationReport);
-        rl.prompt();
-        return;
-      }
-    
-      const mutationReport = await mutateState(currentState, line.trim());
-      const newAbilitiesReport = await analyzeNewAbilities(currentState);
-      const finalReport = await compileReports(validationReport, mutationReport, newAbilitiesReport);
-    
-      console.log(finalReport);
+      await processPlayerCommand(line);
       rl.prompt();
     }).on('close', () => {
       console.log('Goodbye, Creator!');
@@ -58,13 +39,19 @@ function showSplashText(index = 0) {
   }
 }
 
-async function processPlayerCommand(playerInput) {
-  const validationReport = await validateCommand(currentState, playerInput);
+async function processPlayerCommand(line: string) {
+  const validationReport = await validateCommand(currentState, line.trim()) || "";
+  if (!validationReport.includes("valid")) { // Assuming the validation text indicates validity clearly
+    console.log(validationReport);
+    rl.prompt();
+    return;
+  }
 
-  const mutationReport = mutateState(currentState, playerInput);
-  const newAbilitiesReport = analyzeNewAbilities(mutationReport);
+  const mutationReport = await mutateState(currentState, line.trim());
+  const newAbilitiesReport = await analyzeNewAbilities(currentState);
+  const finalReport = await compileReports(validationReport, mutationReport, newAbilitiesReport);
 
-  return compileReports(validationReport, mutationReport, newAbilitiesReport);
+  console.log(finalReport);
 }
 
 async function validateCommand(state, command) {
