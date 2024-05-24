@@ -1,6 +1,6 @@
-# LLM God Game
+# Cover letter generator
 
-A text-only god game in the CLI.
+A text-only cover letter generator in the CLI.
 
 ## Commands
 
